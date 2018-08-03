@@ -109,6 +109,12 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
 
             dbcontext.Database.ExecuteSqlCommand(sqlForSimple);
 
+            var bulkOption = new BulkConfig
+            {
+                PreserveInsertOrder = false,
+                BulkCopyTimeout = 0,
+                SetOutputIdentity = false, BatchSize = 4000 };
+
             ProjectInfo project = getFirstProject(dbcontext);
             for (int i = 0; i < sensorCnt; i++)
             {
@@ -120,9 +126,8 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
                 dbcontext.Add(sen);
                 dbcontext.SaveChanges();
 
-                int batchCnt = 1000;
 
-                List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(batchCnt);
+                List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(dataCntPerSersor);
 
                 DateTime startDate = new DateTime(1900, 1, 1);
 
@@ -140,17 +145,12 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
                     item.ResValue3 = j;
 
 
-                    if (dataList.Count == batchCnt)
-                    {
-                        dbcontext.BulkInsert(dataList);
-                        dataList.Clear();
-                    }
+                    dataList.Add(item);
 
                 }
                 //避免尾巴
-                dbcontext.BulkInsert(dataList);
-                dataList.Clear();
 
+                dbcontext.BulkInsert(dataList, bulkOption);
 
             }
 
