@@ -14,8 +14,7 @@ namespace SeedDataConsole.Models
         public double? ResValue1 { get; set; }
         public double? ResValue2 { get; set; }
         public double? ResValue3 { get; set; }
-        public int? Status { get; set; }
-        public string Remark { get; set; }
+        public byte? Status { get; set; }
 
         public SensorInfo Sensor { get; set; }
     }

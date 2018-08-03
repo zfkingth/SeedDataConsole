@@ -57,10 +57,6 @@ namespace SeedDataConsole.Models
 
                 entity.Property(e => e.MeaTime).HasColumnType("datetime");
 
-                entity.Property(e => e.Remark)
-                    .HasMaxLength(255)
-                    .IsUnicode(false);
-
                 entity.Property(e => e.SensorId).HasColumnName("SensorID");
 
                 entity.HasOne(d => d.Sensor)
