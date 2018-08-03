@@ -13,9 +13,10 @@ namespace SeedDataConsole
         static void Main(string[] args)
         {
             XLDDSM1Context dbcontext = new XLDDSM1Context();
-            dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
 
             int cnt = dbcontext.SensorInfo.Count();
+
+
 
             Console.WriteLine("是否删除所有数据，然后重新插入数据？y/n");
             var key = Console.ReadKey();
@@ -43,7 +44,7 @@ namespace SeedDataConsole
                 stop.Start();
                 int insertSensorCnt = 9899;
                 int insertDataCntPerSersor = 87600;
-                seedSensor_Data(insertSensorCnt, insertDataCntPerSersor, dbcontext);
+                seedSensor_Data(insertSensorCnt, insertDataCntPerSersor);
                 stop.Stop();
 
                 Console.WriteLine(string.Format("插入 {0:N0} 条数据，用时 {1:N0} 毫秒。",
@@ -55,6 +56,23 @@ namespace SeedDataConsole
             Console.WriteLine("测点数量: " + cnt);
 
             prepareQuit();
+        }
+
+        private static ProjectInfo getFirstProject(XLDDSM1Context dbcontext)
+        {
+            var item = dbcontext.ProjectInfo.FirstOrDefault();
+
+            if (item == null)
+            {
+                item = new ProjectInfo();
+                item.Id = Guid.NewGuid();
+                item.Name = "测试工程。";
+                dbcontext.Add(item);
+                dbcontext.SaveChanges();
+
+            }
+
+            return item;
         }
 
         private static void prepareQuit()
@@ -79,20 +97,35 @@ namespace SeedDataConsole
 
         }
 
-        private static void seedSensor_Data(int sensorCnt, int dataCntPerSersor, XLDDSM1Context dbcontext)
+        private static void seedSensor_Data(int sensorCnt, int dataCntPerSersor)
         {
+            XLDDSM1Context dbcontext = new XLDDSM1Context();
+            dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
+
+            string sqlForFull = @"USE master ;  
+ALTER DATABASE XLDDSM1 SET RECOVERY FULL ;  ";
+            string sqlForSimple = @"USE master ;  
+ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
+
+            dbcontext.Database.ExecuteSqlCommand(sqlForSimple);
+
+            ProjectInfo project = getFirstProject(dbcontext);
             for (int i = 0; i < sensorCnt; i++)
             {
                 string sensorCode = "test" + i;
                 SensorInfo sen = new SensorInfo();
                 sen.Id = Guid.NewGuid();
                 sen.SensorCode = sensorCode;
+                sen.ProjectId = project.Id;
                 dbcontext.Add(sen);
                 dbcontext.SaveChanges();
 
-                List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(dataCntPerSersor);
+                int batchCnt = 1000;
+
+                List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(batchCnt);
 
                 DateTime startDate = new DateTime(1900, 1, 1);
+
                 for (int j = 0; j < dataCntPerSersor; j++)
                 {
                     var item = new SensorDataOrigin();
@@ -106,12 +139,22 @@ namespace SeedDataConsole
                     item.ResValue2 = j;
                     item.ResValue3 = j;
 
-                    dataList.Add(item);
-                }
 
+                    if (dataList.Count == batchCnt)
+                    {
+                        dbcontext.BulkInsert(dataList);
+                        dataList.Clear();
+                    }
+
+                }
+                //避免尾巴
                 dbcontext.BulkInsert(dataList);
+                dataList.Clear();
+
 
             }
+
+
         }
     }
 }
