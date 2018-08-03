@@ -47,7 +47,7 @@ namespace SeedDataConsole
                 Stopwatch stop = new Stopwatch();
                 stop.Start();
                 int insertSensorCnt = 9899;
-                int insertDataCntPerSersor = 100;
+                int insertDataCntPerSersor = 87600;
                 seedSensor_Data(insertSensorCnt, insertDataCntPerSersor);
                 stop.Stop();
 
