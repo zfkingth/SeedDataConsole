@@ -47,7 +47,7 @@ namespace SeedDataConsole
                 Stopwatch stop = new Stopwatch();
                 stop.Start();
                 int insertSensorCnt = 9899;
-                int insertDataCntPerSersor = 87600;
+                int insertDataCntPerSersor = 100;
                 seedSensor_Data(insertSensorCnt, insertDataCntPerSersor);
                 stop.Stop();
 
@@ -115,46 +115,64 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
 
             Console.WriteLine("cleared all data in database");
 
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Id", typeof(Guid));
-            dt.Columns.Add("SensorId", typeof(Guid));
-            dt.Columns.Add("MeaTime", typeof(DateTime));
-            dt.Columns.Add("MeaValue1", typeof(float));
-            dt.Columns.Add("MeaValue2", typeof(float));
-            dt.Columns.Add("MeaValue3", typeof(float));
-            dt.Columns.Add("ResValue1", typeof(float));
-            dt.Columns.Add("ResValue2", typeof(float));
-            dt.Columns.Add("ResValue3", typeof(float));
-            dt.Columns.Add("Status", typeof(byte));
+            DataTable originDataTable = new DataTable();
+            originDataTable.Columns.Add("Id", typeof(Guid));
+            originDataTable.Columns.Add("SensorId", typeof(Guid));
+            originDataTable.Columns.Add("MeaTime", typeof(DateTime));
+            originDataTable.Columns.Add("MeaValue1", typeof(float));
+            originDataTable.Columns.Add("MeaValue2", typeof(float));
+            originDataTable.Columns.Add("MeaValue3", typeof(float));
+            originDataTable.Columns.Add("ResValue1", typeof(float));
+            originDataTable.Columns.Add("ResValue2", typeof(float));
+            originDataTable.Columns.Add("ResValue3", typeof(float));
+            originDataTable.Columns.Add("Status", typeof(byte));
+
+
+            //
+
+            //DataTable sensorInfoTable = new DataTable();
+            //sensorInfoTable.Columns.Add("Id", typeof(Guid));
+            //sensorInfoTable.Columns.Add("ProjectId", typeof(Guid));
+            //sensorInfoTable.Columns.Add("SensorCode", typeof(string));
+
 
             DateTime startDate = new DateTime(1900, 1, 1);
 
 
             ProjectInfo project = getFirstProject(dbcontext);
+
+            List<SensorInfo> sensorList = new List<SensorInfo>(sensorCnt);
             for (int i = 0; i < sensorCnt; i++)
             {
-                Console.WriteLine(string.Format("inserting No. {0} Sensor info ", i + 1));
-                dt.Clear();
+                //Console.WriteLine(string.Format("inserting No. {0} Sensor info ", i + 1));
 
-                dbcontext = new XLDDSM1Context();
-                dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
-
-                string sensorCode = "test" + i;
+                string sensorCode = "test" + i.ToString("d5");
                 SensorInfo sen = new SensorInfo();
                 sen.Id = Guid.NewGuid();
                 sen.SensorCode = sensorCode;
                 sen.ProjectId = project.Id;
-                dbcontext.Add(sen);
-                dbcontext.SaveChanges();
 
 
-                Console.WriteLine(string.Format("inserting No. {0} Sensor data", i + 1));
+                sensorList.Add(sen);
+            }
 
+            Stopwatch stop = new Stopwatch();
+            stop.Start();
+            dbcontext.BulkInsert(sensorList);
+            stop.Stop();
+            Console.WriteLine(string.Format("insert all sersor info Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
+
+            var orderEnum = sensorList.OrderBy(s => s.Id);
+            int index = 0;
+            foreach (var senItem in orderEnum)
+            {
+                originDataTable.Clear();
                 for (int j = 0; j < dataCntPerSersor; j++)
                 {
-                    var item = dt.NewRow();
+
+                    var item = originDataTable.NewRow();
                     item["Id"] = Guid.NewGuid();
-                    item["SensorId"] = sen.Id;
+                    item["SensorId"] = senItem.Id;
                     item["MeaTime"] = startDate.AddHours(0.5 * j);
                     item["MeaValue1"] = j;
                     item["MeaValue2"] = j;
@@ -165,25 +183,36 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
                     item["Status"] = 0;
 
 
-                    dt.Rows.Add(item);
-
-                }
-                //避免尾巴
-
-                using (var connection = new SqlConnection(ConnectionString))
-                {
-                    connection.Open();
-                    using(var sqlBulkCopy=new SqlBulkCopy(connection))
-                    {
-                        sqlBulkCopy.DestinationTableName = "SensorDataOrigin";
-                        sqlBulkCopy.WriteToServer(dt);
-                    }
+                    originDataTable.Rows.Add(item);
                 }
 
+                Console.Write(string.Format("inserting {0}  data , No. {1:d5},", senItem.SensorCode, index));
+                stop = new Stopwatch();
+                stop.Start();
+                bulkcopy(originDataTable);
+                stop.Stop();
+
+                Console.WriteLine(string.Format(" Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
+                index++;
             }
+            //避免尾巴
+
 
             dbcontext.Database.ExecuteSqlCommand(sqlForFull);
 
+        }
+
+        private static void bulkcopy(DataTable dt)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (var sqlBulkCopy = new SqlBulkCopy(connection))
+                {
+                    sqlBulkCopy.DestinationTableName = "SensorDataOrigin";
+                    sqlBulkCopy.WriteToServer(dt);
+                }
+            }
         }
     }
 }
