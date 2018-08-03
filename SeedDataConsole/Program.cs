@@ -52,7 +52,7 @@ namespace SeedDataConsole
                 stop.Stop();
 
                 Console.WriteLine(string.Format("插入 {0:N0} 条数据，用时 {1:N0} 毫秒。",
-                    insertDataCntPerSersor * insertDataCntPerSersor, stop.ElapsedMilliseconds));
+                   (long)insertDataCntPerSersor * insertDataCntPerSersor, stop.ElapsedMilliseconds));
             }
 
             cnt = dbcontext.SensorInfo.Count();
