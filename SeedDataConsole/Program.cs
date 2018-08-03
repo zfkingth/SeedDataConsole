@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using SeedDataConsole.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 
@@ -10,15 +12,17 @@ namespace SeedDataConsole
 {
     class Program
     {
+
+        public static string ConnectionString = "Server=.;Database=XLDDSM1;Trusted_Connection=True;";
         static void Main(string[] args)
         {
+            Console.WriteLine("是否删除所有数据，然后重新插入数据？y/n");
             XLDDSM1Context dbcontext = new XLDDSM1Context();
 
             int cnt = dbcontext.SensorInfo.Count();
 
 
 
-            Console.WriteLine("是否删除所有数据，然后重新插入数据？y/n");
             var key = Console.ReadKey();
             Console.WriteLine();
             if (key.KeyChar == 'y')
@@ -109,15 +113,32 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
 
             dbcontext.Database.ExecuteSqlCommand(sqlForSimple);
 
-            var bulkOption = new BulkConfig
-            {
-                PreserveInsertOrder = false,
-                BulkCopyTimeout = 0,
-                SetOutputIdentity = false, BatchSize = 4000 };
+            Console.WriteLine("cleared all data in database");
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(Guid));
+            dt.Columns.Add("SensorId", typeof(Guid));
+            dt.Columns.Add("MeaTime", typeof(DateTime));
+            dt.Columns.Add("MeaValue1", typeof(float));
+            dt.Columns.Add("MeaValue2", typeof(float));
+            dt.Columns.Add("MeaValue3", typeof(float));
+            dt.Columns.Add("ResValue1", typeof(float));
+            dt.Columns.Add("ResValue2", typeof(float));
+            dt.Columns.Add("ResValue3", typeof(float));
+            dt.Columns.Add("Status", typeof(byte));
+
+            DateTime startDate = new DateTime(1900, 1, 1);
+
 
             ProjectInfo project = getFirstProject(dbcontext);
             for (int i = 0; i < sensorCnt; i++)
             {
+                Console.WriteLine(string.Format("inserting No. {0} Sensor info ", i + 1));
+                dt.Clear();
+
+                dbcontext = new XLDDSM1Context();
+                dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
+
                 string sensorCode = "test" + i;
                 SensorInfo sen = new SensorInfo();
                 sen.Id = Guid.NewGuid();
@@ -127,33 +148,41 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
                 dbcontext.SaveChanges();
 
 
-                List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(dataCntPerSersor);
-
-                DateTime startDate = new DateTime(1900, 1, 1);
+                Console.WriteLine(string.Format("inserting No. {0} Sensor data", i + 1));
 
                 for (int j = 0; j < dataCntPerSersor; j++)
                 {
-                    var item = new SensorDataOrigin();
-                    item.Id = Guid.NewGuid();
-                    item.SensorId = sen.Id;
-                    item.MeaTime = startDate.AddHours(0.5 * j);
-                    item.MeaValue1 = j;
-                    item.MeaValue2 = j;
-                    item.MeaValue3 = j;
-                    item.ResValue1 = j;
-                    item.ResValue2 = j;
-                    item.ResValue3 = j;
+                    var item = dt.NewRow();
+                    item["Id"] = Guid.NewGuid();
+                    item["SensorId"] = sen.Id;
+                    item["MeaTime"] = startDate.AddHours(0.5 * j);
+                    item["MeaValue1"] = j;
+                    item["MeaValue2"] = j;
+                    item["MeaValue3"] = j;
+                    item["ResValue1"] = j;
+                    item["ResValue2"] = j;
+                    item["ResValue3"] = j;
+                    item["Status"] = 0;
 
 
-                    dataList.Add(item);
+                    dt.Rows.Add(item);
 
                 }
                 //避免尾巴
 
-                dbcontext.BulkInsert(dataList, bulkOption);
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    using(var sqlBulkCopy=new SqlBulkCopy(connection))
+                    {
+                        sqlBulkCopy.DestinationTableName = "SensorDataOrigin";
+                        sqlBulkCopy.WriteToServer(dt);
+                    }
+                }
 
             }
 
+            dbcontext.Database.ExecuteSqlCommand(sqlForFull);
 
         }
     }
