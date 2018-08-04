@@ -106,17 +106,12 @@ namespace SeedDataConsole
             DSMContext dbcontext = new DSMContext();
             dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
 
-            string sqlForFull = @"USE master ;  
-ALTER DATABASE XLDDSM1 SET RECOVERY FULL ;  ";
-            string sqlForSimple = @"USE master ;  
-ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
+          
 
-            dbcontext.Database.ExecuteSqlCommand(sqlForSimple);
 
             Console.WriteLine("cleared all data in database");
 
             DataTable originDataTable = new DataTable();
-            originDataTable.Columns.Add("Id", typeof(Guid));
             originDataTable.Columns.Add("SensorId", typeof(Guid));
             originDataTable.Columns.Add("MeaTime", typeof(DateTime));
             originDataTable.Columns.Add("MeaValue1", typeof(float));
@@ -125,7 +120,6 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
             originDataTable.Columns.Add("ResValue1", typeof(float));
             originDataTable.Columns.Add("ResValue2", typeof(float));
             originDataTable.Columns.Add("ResValue3", typeof(float));
-            originDataTable.Columns.Add("Status", typeof(byte));
 
 
             //
@@ -171,7 +165,6 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
                 {
 
                     var item = originDataTable.NewRow();
-                    item["Id"] = Guid.NewGuid();
                     item["SensorId"] = senItem.Id;
                     item["MeaTime"] = startDate.AddHours(0.5 * j);
                     item["MeaValue1"] = j;
@@ -180,7 +173,6 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
                     item["ResValue1"] = j;
                     item["ResValue2"] = j;
                     item["ResValue3"] = j;
-                    item["Status"] = 0;
 
 
                     originDataTable.Rows.Add(item);
@@ -198,7 +190,6 @@ ALTER DATABASE XLDDSM1 SET RECOVERY Simple ;  ";
             //避免尾巴
 
 
-            dbcontext.Database.ExecuteSqlCommand(sqlForFull);
 
         }
 
