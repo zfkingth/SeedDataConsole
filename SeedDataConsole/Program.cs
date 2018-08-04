@@ -15,7 +15,7 @@ namespace SeedDataConsole
 
         //command in package manager console
         // Scaffold-DbContext "Server=.;Database=XLDDSMTest;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context DSMContext
-        public static string ConnectionString = "Server=.;Database=XLDDSMTest;Trusted_Connection=True;";
+        public static string ConnectionString = "Server=.;Database=XLDDSMTest2;Trusted_Connection=True;";
         static void Main(string[] args)
         {
             Console.WriteLine("是否删除所有数据，然后重新插入数据？yes/no");
