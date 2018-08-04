@@ -13,6 +13,8 @@ namespace SeedDataConsole
     class Program
     {
 
+        //command in package manager console
+        // Scaffold-DbContext "Server=.;Database=XLDDSMTest;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context DSMContext
         public static string ConnectionString = "Server=.;Database=XLDDSMTest;Trusted_Connection=True;";
         static void Main(string[] args)
         {
