@@ -18,16 +18,16 @@ namespace SeedDataConsole
         public static string ConnectionString = "Server=.;Database=XLDDSMTest;Trusted_Connection=True;";
         static void Main(string[] args)
         {
-            Console.WriteLine("是否删除所有数据，然后重新插入数据？y/n");
+            Console.WriteLine("是否删除所有数据，然后重新插入数据？yes/no");
             DSMContext dbcontext = new DSMContext();
 
             int cnt = dbcontext.SensorInfo.Count();
 
 
 
-            var key = Console.ReadKey();
+            var key = Console.ReadLine();
             Console.WriteLine();
-            if (key.KeyChar == 'y')
+            if (string.Equals(key, "yes", StringComparison.OrdinalIgnoreCase))
             {
                 deleteAllValues(dbcontext);
                 cnt = dbcontext.SensorInfo.Count();
