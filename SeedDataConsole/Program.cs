@@ -17,7 +17,7 @@ namespace SeedDataConsole
         static void Main(string[] args)
         {
             Console.WriteLine("是否删除所有数据，然后重新插入数据？y/n");
-            XLDDSM1Context dbcontext = new XLDDSM1Context();
+            DSMContext dbcontext = new DSMContext();
 
             int cnt = dbcontext.SensorInfo.Count();
 
@@ -62,7 +62,7 @@ namespace SeedDataConsole
             prepareQuit();
         }
 
-        private static ProjectInfo getFirstProject(XLDDSM1Context dbcontext)
+        private static ProjectInfo getFirstProject(DSMContext dbcontext)
         {
             var item = dbcontext.ProjectInfo.FirstOrDefault();
 
@@ -88,7 +88,7 @@ namespace SeedDataConsole
 
         }
 
-        private static void deleteAllValues(XLDDSM1Context dbcontext)
+        private static void deleteAllValues(DSMContext dbcontext)
         {
             string sqlDeleteStatement =
                 @"alter table  [dbo].[SensorDataOrigin]  nocheck CONSTRAINT ALL;
@@ -103,7 +103,7 @@ namespace SeedDataConsole
 
         private static void seedSensor_Data(int sensorCnt, int dataCntPerSersor)
         {
-            XLDDSM1Context dbcontext = new XLDDSM1Context();
+            DSMContext dbcontext = new DSMContext();
             dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
 
             string sqlForFull = @"USE master ;  

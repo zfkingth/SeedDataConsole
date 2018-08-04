@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace SeedDataConsole.Models
 {
-    public partial class XLDDSM1Context : DbContext
+    public partial class DSMContext : DbContext
     {
-        public XLDDSM1Context()
+        public DSMContext()
         {
         }
 
-        public XLDDSM1Context(DbContextOptions<XLDDSM1Context> options)
+        public DSMContext(DbContextOptions<DSMContext> options)
             : base(options)
         {
         }
@@ -43,25 +43,26 @@ namespace SeedDataConsole.Models
 
             modelBuilder.Entity<SensorDataOrigin>(entity =>
             {
-                entity.HasKey(e => e.Id)
+                entity.HasKey(e => new { e.SensorId, e.MeaTime })
                     .ForSqlServerIsClustered(false);
 
                 entity.HasIndex(e => new { e.SensorId, e.MeaTime })
-                    .HasName("SensorId_MeaTime_Clustered")
+                    .HasName("ClusteredIndex-20180803-224531")
                     .IsUnique()
                     .ForSqlServerIsClustered();
 
-                entity.Property(e => e.Id)
-                    .HasColumnName("ID")
-                    .ValueGeneratedNever();
+                entity.Property(e => e.SensorId).HasColumnName("SensorID");
 
                 entity.Property(e => e.MeaTime).HasColumnType("datetime");
 
-                entity.Property(e => e.SensorId).HasColumnName("SensorID");
+                entity.Property(e => e.Remark)
+                    .HasMaxLength(255)
+                    .IsUnicode(false);
 
                 entity.HasOne(d => d.Sensor)
                     .WithMany(p => p.SensorDataOrigin)
                     .HasForeignKey(d => d.SensorId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SensorDataOrigin_SensorInfo");
             });
 
@@ -72,6 +73,7 @@ namespace SeedDataConsole.Models
 
                 entity.HasIndex(e => new { e.ProjectId, e.SensorCode })
                     .HasName("ProjectID_Name_ClusteredIndex")
+                    .IsUnique()
                     .ForSqlServerIsClustered();
 
                 entity.Property(e => e.Id)
