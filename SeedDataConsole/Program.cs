@@ -54,7 +54,7 @@ namespace SeedDataConsole
                 stop.Stop();
 
                 Console.WriteLine(string.Format("插入 {0:N0} 条数据，用时 {1:N0} 毫秒。",
-                   (long)insertDataCntPerSersor * insertDataCntPerSersor, stop.ElapsedMilliseconds));
+                   (long)insertSensorCnt * insertDataCntPerSersor, stop.ElapsedMilliseconds));
             }
 
             cnt = dbcontext.SensorInfo.Count();
@@ -108,22 +108,17 @@ namespace SeedDataConsole
             DSMContext dbcontext = new DSMContext();
             dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
 
-          
+
 
 
             Console.WriteLine("cleared all data in database");
 
-            DataTable originDataTable = new DataTable();
-            originDataTable.Columns.Add("SensorId", typeof(Guid));
-            originDataTable.Columns.Add("MeaTime", typeof(DateTime));
-            originDataTable.Columns.Add("MeaValue1", typeof(float));
-            originDataTable.Columns.Add("MeaValue2", typeof(float));
-            originDataTable.Columns.Add("MeaValue3", typeof(float));
-            originDataTable.Columns.Add("ResValue1", typeof(float));
-            originDataTable.Columns.Add("ResValue2", typeof(float));
-            originDataTable.Columns.Add("ResValue3", typeof(float));
-
-
+            var bulkOption = new BulkConfig
+            {
+                PreserveInsertOrder = true,
+                SetOutputIdentity = false,
+                BatchSize = dataCntPerSersor
+            };
             //
 
             //DataTable sensorInfoTable = new DataTable();
@@ -159,34 +154,39 @@ namespace SeedDataConsole
             Console.WriteLine(string.Format("insert all sersor info Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
 
             var orderEnum = sensorList.OrderBy(s => s.Id);
+
+            List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(dataCntPerSersor);
+
             int index = 0;
             foreach (var senItem in orderEnum)
             {
-                originDataTable.Clear();
+                dataList.Clear();
                 for (int j = 0; j < dataCntPerSersor; j++)
                 {
 
-                    var item = originDataTable.NewRow();
-                    item["SensorId"] = senItem.Id;
-                    item["MeaTime"] = startDate.AddHours(0.5 * j);
-                    item["MeaValue1"] = j;
-                    item["MeaValue2"] = j;
-                    item["MeaValue3"] = j;
-                    item["ResValue1"] = j;
-                    item["ResValue2"] = j;
-                    item["ResValue3"] = j;
+                    var item = new SensorDataOrigin();
+                    item.SensorId = senItem.Id;
+                    item.MeaTime = startDate.AddHours(0.5 * j);
+                    item.MeaValue1 = j;
+                    item.MeaValue2 = j;
+                    item.MeaValue3 = j;
+                    item.ResValue1 = j;
+                    item.ResValue2 = j;
+                    item.ResValue3 = j;
 
 
-                    originDataTable.Rows.Add(item);
+                    dataList.Add(item);
                 }
 
-                Console.Write(string.Format("inserting {0}  data , No. {1:d5},", senItem.SensorCode, index));
+                Console.Write(string.Format("inserting data of {0} , order: {1:d5},", senItem.SensorCode, index));
                 stop = new Stopwatch();
                 stop.Start();
-                bulkcopy(originDataTable);
+                dbcontext = new DSMContext();
+                dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
+                dbcontext.BulkInsert(dataList, bulkOption);
                 stop.Stop();
 
-                Console.WriteLine(string.Format(" Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
+                Console.WriteLine(string.Format(" Elapsed :{0}  ms", stop.ElapsedMilliseconds));
                 index++;
             }
             //避免尾巴
