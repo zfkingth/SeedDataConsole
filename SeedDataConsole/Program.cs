@@ -13,7 +13,7 @@ namespace SeedDataConsole
     class Program
     {
 
-        public static string ConnectionString = "Server=.;Database=XLDDSM1;Trusted_Connection=True;";
+        public static string ConnectionString = "Server=.;Database=XLDDSMTest;Trusted_Connection=True;";
         static void Main(string[] args)
         {
             Console.WriteLine("是否删除所有数据，然后重新插入数据？y/n");
@@ -93,7 +93,7 @@ namespace SeedDataConsole
             string sqlDeleteStatement =
                 @"alter table  [dbo].[SensorDataOrigin]  nocheck CONSTRAINT ALL;
                 TRUNCATE TABLE[dbo].[SensorDataOrigin];
-                delete from[dbo].SensorInfo;
+                delete from[dbo].[SensorInfo];
                 alter table  [dbo].[SensorDataOrigin]  check CONSTRAINT ALL;";
             dbcontext.Database.ExecuteSqlCommand(sqlDeleteStatement);
 
