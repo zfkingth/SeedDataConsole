@@ -14,8 +14,8 @@ namespace SeedDataConsole
     {
 
         //command in package manager console
-        // Scaffold-DbContext "Server=.;Database=XLDDSMTest;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context DSMContext
-        public static string ConnectionString = "Server=.;Database=XLDDSMTest2;Trusted_Connection=True;";
+        // Scaffold-DbContext "Server=.;Database=DSM_Int;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context DSMContext
+        public static string ConnectionString = "Server=.;Database=DSM_Int;Trusted_Connection=True;";
 
         public static string PrefixName = "test";
         public static DateTime StartDate = new DateTime(1900, 1, 1);
@@ -95,7 +95,7 @@ namespace SeedDataConsole
             //clearDbCache(db);
 
 
-            List<Guid> sensorIdList = getRandom20SensorIdList(db, project, insertSensorCnt);
+            List<int> sensorIdList = getRandom20SensorIdList(db, project, insertSensorCnt);
 
 
 
@@ -147,7 +147,7 @@ namespace SeedDataConsole
 
         }
 
-        private static List<Guid> getRandom20SensorIdList(DSMContext db, ProjectInfo project, int insertSensorCnt)
+        private static List<int> getRandom20SensorIdList(DSMContext db, ProjectInfo project, int insertSensorCnt)
         {
             List<string> codeList = new List<string>();
             for (int i = 0; i < 20; i++)
@@ -181,7 +181,6 @@ DBCC DROPCLEANBUFFERS;";
             if (item == null)
             {
                 item = new ProjectInfo();
-                item.Id = Guid.NewGuid();
                 item.Name = "测试工程。";
                 dbcontext.Add(item);
                 dbcontext.SaveChanges();
@@ -229,6 +228,13 @@ DBCC DROPCLEANBUFFERS;";
                 SetOutputIdentity = false,
                 BatchSize = dataCntPerSersor
             };
+
+            var bulkOptionForSensor = new BulkConfig
+            {
+                PreserveInsertOrder = true,
+                SetOutputIdentity = true,
+               
+            };
             //
 
             //DataTable sensorInfoTable = new DataTable();
@@ -248,7 +254,6 @@ DBCC DROPCLEANBUFFERS;";
 
                 string sensorCode = PrefixName + i.ToString("d5");
                 SensorInfo sen = new SensorInfo();
-                sen.Id = Guid.NewGuid();
                 sen.SensorCode = sensorCode;
                 sen.ProjectId = project.Id;
 
@@ -258,7 +263,7 @@ DBCC DROPCLEANBUFFERS;";
 
             Stopwatch stop = new Stopwatch();
             stop.Start();
-            dbcontext.BulkInsert(sensorList);
+            dbcontext.BulkInsert(sensorList,bulkOptionForSensor);
             stop.Stop();
             Console.WriteLine(string.Format("insert all sersor info Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
 

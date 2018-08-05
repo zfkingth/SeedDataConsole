@@ -10,7 +10,7 @@ namespace SeedDataConsole.Models
             SensorInfo = new HashSet<SensorInfo>();
         }
 
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
 
         public ICollection<SensorInfo> SensorInfo { get; set; }

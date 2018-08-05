@@ -10,8 +10,8 @@ namespace SeedDataConsole.Models
             SensorDataOrigin = new HashSet<SensorDataOrigin>();
         }
 
-        public Guid Id { get; set; }
-        public Guid ProjectId { get; set; }
+        public int Id { get; set; }
+        public int? ProjectId { get; set; }
         public string SensorCode { get; set; }
         public Guid? SensorTypeId { get; set; }
         public Guid? ProjectSiteId { get; set; }

@@ -32,24 +32,16 @@ namespace SeedDataConsole.Models
         {
             modelBuilder.Entity<ProjectInfo>(entity =>
             {
-                entity.Property(e => e.Id)
-                    .HasColumnName("ID")
-                    .ValueGeneratedNever();
+                entity.Property(e => e.Id).HasColumnName("ID");
 
                 entity.Property(e => e.Name)
                     .IsRequired()
-                    .HasMaxLength(10);
+                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<SensorDataOrigin>(entity =>
             {
-                entity.HasKey(e => new { e.SensorId, e.MeaTime })
-                    .ForSqlServerIsClustered(false);
-
-                entity.HasIndex(e => new { e.SensorId, e.MeaTime })
-                    .HasName("ClusteredIndex-20180803-224531")
-                    .IsUnique()
-                    .ForSqlServerIsClustered();
+                entity.HasKey(e => new { e.SensorId, e.MeaTime });
 
                 entity.Property(e => e.SensorId).HasColumnName("SensorID");
 
@@ -72,13 +64,11 @@ namespace SeedDataConsole.Models
                     .ForSqlServerIsClustered(false);
 
                 entity.HasIndex(e => new { e.ProjectId, e.SensorCode })
-                    .HasName("ProjectID_Name_ClusteredIndex")
+                    .HasName("ClusteredIndex-20180804-225417")
                     .IsUnique()
                     .ForSqlServerIsClustered();
 
-                entity.Property(e => e.Id)
-                    .HasColumnName("ID")
-                    .ValueGeneratedNever();
+                entity.Property(e => e.Id).HasColumnName("ID");
 
                 entity.Property(e => e.LayLocation)
                     .HasMaxLength(255)
@@ -107,7 +97,6 @@ namespace SeedDataConsole.Models
                 entity.HasOne(d => d.Project)
                     .WithMany(p => p.SensorInfo)
                     .HasForeignKey(d => d.ProjectId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SensorInfo_ProjectInfo");
             });
         }
