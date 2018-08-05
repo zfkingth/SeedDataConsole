@@ -67,29 +67,38 @@ namespace SeedDataConsole
             Console.WriteLine("测点数量: " + cnt);
             ProjectInfo project = getFirstProject(dbcontext);
             ConsoleKeyInfo input;
-            Console.WriteLine("单测点按时间分别查询测试：");
-            do
-            {
-                testQuerySingle(dbcontext, project, insertSensorCnt);
-                Console.Write("输入n退出当前测试循环，");
-                input = Console.ReadKey();
-                Console.WriteLine();
-            } while (input.KeyChar != 'n');
 
-            Console.WriteLine("20测点按时间分别查询测试：");
-            do
-            {
-                testQueryMultiply(dbcontext, project, insertSensorCnt);
-                Console.Write("输入n退出当前测试循环，");
-                input = Console.ReadKey();
-                Console.WriteLine();
-            } while (input.KeyChar != 'n');
+            const int testLoopCnt = 100;
+            Console.WriteLine(string.Format("单测点按时间区分查询测试：{0}次", testLoopCnt));
 
+            int cntLoop = 0;
+            long cntTime = 0;
+
+            for (int i = 0; i < testLoopCnt; i++)
+            {
+                cntTime += testQuerySingle(dbcontext, project, insertSensorCnt);
+                cntLoop++;
+            }
+
+            Console.WriteLine(string.Format("平均耗时：{0} ms。", cntTime / cntLoop));
+
+            cntLoop = 0;
+            cntTime = 0;
+            Console.WriteLine(string.Format("20测点按时间区分查询测试：{0}次", testLoopCnt));
+
+            for (int i = 0; i < testLoopCnt; i++)
+            {
+                cntTime += testQueryMultiply(dbcontext, project, insertSensorCnt);
+                cntLoop++;
+            }
+
+
+            Console.WriteLine(string.Format("平均耗时：{0} ms。", cntTime / cntLoop));
 
             prepareQuit();
         }
 
-        private static void testQueryMultiply(DSMContext db, ProjectInfo project, int insertSensorCnt)
+        private static long testQueryMultiply(DSMContext db, ProjectInfo project, int insertSensorCnt)
         {
 
             //clearDbCache(db);
@@ -110,11 +119,11 @@ namespace SeedDataConsole
 
             Console.WriteLine(string.Format("随机查询并返回20测点多个数据，返回数据{0}条, 耗时 {1:N0} ms。",
                 result.Length, watch.ElapsedMilliseconds));
-
+            return watch.ElapsedMilliseconds;
 
         }
 
-        private static void testQuerySingle(DSMContext db, ProjectInfo project, int insertSensorCnt)
+        private static long testQuerySingle(DSMContext db, ProjectInfo project, int insertSensorCnt)
         {
 
             //clearDbCache(db);
@@ -132,6 +141,7 @@ namespace SeedDataConsole
             Console.WriteLine(string.Format("随机查询并返回单个测点半年数据，返回数据{0}条, 耗时 {1:N0} ms。sensor code: {2}",
                 result.Length, watch.ElapsedMilliseconds, sensor.SensorCode));
 
+            return watch.ElapsedMilliseconds;
 
         }
 
