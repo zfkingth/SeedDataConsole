@@ -24,7 +24,7 @@ namespace SeedDataConsole.Models
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer(Program.ConnectionString);
+                optionsBuilder.UseSqlServer("Server=.;Database=DSM3;Trusted_Connection=True;");
             }
         }
 
@@ -43,7 +43,7 @@ namespace SeedDataConsole.Models
 
             modelBuilder.Entity<SensorDataOrigin>(entity =>
             {
-                entity.HasKey(e => new { e.SensorId, e.MeaTime, e.Origin });
+                entity.HasKey(e => new { e.SensorId, e.Origin, e.MeaTime });
 
                 entity.Property(e => e.SensorId).HasColumnName("SensorID");
 
@@ -92,7 +92,9 @@ namespace SeedDataConsole.Models
 
                 entity.Property(e => e.ProjectSiteId).HasColumnName("ProjectSiteID");
 
-                entity.Property(e => e.SensorCode).HasMaxLength(50);
+                entity.Property(e => e.SensorCode)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.SensorTypeId).HasColumnName("SensorTypeID");
 

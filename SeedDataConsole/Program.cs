@@ -15,7 +15,6 @@ namespace SeedDataConsole
 
         //command in package manager console
         // Scaffold-DbContext "Server=.;Database=DSM3;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context DSMContext
-        public static string ConnectionString = "Server=.;Database=DSM3;Trusted_Connection=True;";
 
         public static string PrefixName = "test";
         public static DateTimeOffset StartDate = new DateTimeOffset((new DateTime(1900, 1, 1)));
@@ -23,10 +22,10 @@ namespace SeedDataConsole
 
         static void Main(string[] args)
         {
-            Console.WriteLine("数据库连接字符串为：" + ConnectionString);
-            Console.WriteLine("是否接着上一次操作插入数据，保证数据量达到测试要求？yes/no");
             DSMContext dbcontext = new DSMContext();
-
+            Console.WriteLine("数据库连接字符串为：" + dbcontext.Database.GetDbConnection().ConnectionString);
+);
+            Console.WriteLine("是否接着上一次操作插入数据，保证数据量达到测试要求？yes/no");
             int alreadySensorCnt = 0;
 
             var key = Console.ReadLine();
@@ -329,9 +328,9 @@ DBCC DROPCLEANBUFFERS;";
 
         }
 
-        private static void bulkcopy(DataTable dt)
+        private static void bulkcopy(DataTable dt, string connectionString)
         {
-            using (var connection = new SqlConnection(ConnectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 using (var sqlBulkCopy = new SqlBulkCopy(connection))

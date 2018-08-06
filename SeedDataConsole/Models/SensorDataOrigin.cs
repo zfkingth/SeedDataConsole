@@ -6,8 +6,8 @@ namespace SeedDataConsole.Models
     public partial class SensorDataOrigin
     {
         public Guid SensorId { get; set; }
-        public DateTimeOffset MeaTime { get; set; }
         public byte Origin { get; set; }
+        public DateTimeOffset MeaTime { get; set; }
         public double? MeaValue1 { get; set; }
         public double? MeaValue2 { get; set; }
         public double? MeaValue3 { get; set; }
