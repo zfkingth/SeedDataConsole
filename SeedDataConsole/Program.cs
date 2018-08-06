@@ -24,51 +24,39 @@ namespace SeedDataConsole
         static void Main(string[] args)
         {
             Console.WriteLine("数据库连接字符串为：" + ConnectionString);
-            Console.WriteLine("是否删除所有数据，然后重新插入数据？yes/no");
+            Console.WriteLine("是否接着上一次操作插入数据，保证数据量达到测试要求？yes/no");
             DSMContext dbcontext = new DSMContext();
 
-            int cnt = dbcontext.SensorInfo.Count();
-
-
+            int alreadySensorCnt = 0;
 
             var key = Console.ReadLine();
             Console.WriteLine();
-            if (string.Equals(key, "yes", StringComparison.OrdinalIgnoreCase))
-            {
-                deleteAllValues(dbcontext);
-                cnt = dbcontext.SensorInfo.Count();
-                if (cnt > 0)
-                {
-                    Console.WriteLine("删除数据失败");
 
-
-                    prepareQuit();
-
-                    return;
-                }
-
-
-            }
 
             int insertSensorCnt = 9899;
             int insertDataCntPerSensor = 87600;
-            if (cnt == 0)
+            if (string.Equals(key, "yes", StringComparison.OrdinalIgnoreCase))
             {
-                Stopwatch stop = new Stopwatch();
-                stop.Start();
+                alreadySensorCnt = getSensorCntInDataOrigin(dbcontext);
+                if (alreadySensorCnt < insertSensorCnt)
+                {
+                    //可以接着之前的插入
 
-                seedSensor_Data(insertSensorCnt, insertDataCntPerSensor);
-                stop.Stop();
+                    Stopwatch stop = new Stopwatch();
+                    stop.Start();
 
-                Console.WriteLine(string.Format("插入 {0:N0} 条数据，用时 {1:N0} 毫秒。",
-                   (long)insertSensorCnt * insertDataCntPerSensor, stop.ElapsedMilliseconds));
+                    seedSensor_Data(alreadySensorCnt, insertSensorCnt, insertDataCntPerSensor);
+                    stop.Stop();
+
+                    Console.WriteLine(string.Format("插入 {0:N0} 条数据，用时 {1:N0} 毫秒。",
+                       (long)(insertSensorCnt - alreadySensorCnt) * insertDataCntPerSensor, stop.ElapsedMilliseconds));
+                }
             }
+            alreadySensorCnt = dbcontext.SensorInfo.Count();
 
-            cnt = dbcontext.SensorInfo.Count();
-
-            Console.WriteLine("测点数量: " + cnt);
+            Console.WriteLine("测点数量: " + alreadySensorCnt);
             ProjectInfo project = getFirstProject(dbcontext);
-            ConsoleKeyInfo input;
+
 
             const int testLoopCnt = 100;
             Console.WriteLine(string.Format("单测点按时间区分查询测试：{0}次", testLoopCnt));
@@ -98,6 +86,33 @@ namespace SeedDataConsole
             Console.WriteLine(string.Format("平均耗时：{0} ms。", cntTime / cntLoop));
 
             prepareQuit();
+        }
+
+        private static int getSensorCntInDataOrigin(DSMContext dbcontext)
+        {
+
+            //插入的时候是按照id的升序插入的。
+            var allSensorList = dbcontext.SensorInfo.OrderBy(s => s.Id).ToList();
+
+            int cnt = 0;
+            for (int i = 0; i < allSensorList.Count(); i++)
+            {
+                var sensor = allSensorList[i];
+                bool exist = (from item in dbcontext.SensorDataOrigin
+                              where item.SensorId == sensor.Id && item.MeaTime == StartDate
+                              select item).Any();
+                if (exist)
+                {
+                    Console.WriteLine(string.Format("{0} 的数据已经插入", sensor.SensorCode));
+                    cnt++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return cnt;
         }
 
         private static long testQueryMultiply(DSMContext db, ProjectInfo project, int insertSensorCnt)
@@ -224,7 +239,7 @@ DBCC DROPCLEANBUFFERS;";
 
         }
 
-        private static void seedSensor_Data(int sensorCnt, int dataCntPerSersor)
+        private static void seedSensor_Data(int alreadySensorCnt, int sensorCnt, int dataCntPerSersor)
         {
             DSMContext dbcontext = new DSMContext();
             dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
@@ -253,33 +268,36 @@ DBCC DROPCLEANBUFFERS;";
             ProjectInfo project = getFirstProject(dbcontext);
 
             List<SensorInfo> sensorList = new List<SensorInfo>(sensorCnt);
-            for (int i = 0; i < sensorCnt; i++)
-            {
-                //Console.WriteLine(string.Format("inserting No. {0} Sensor info ", i + 1));
 
-                string sensorCode = PrefixName + i.ToString("d5");
-                SensorInfo sen = new SensorInfo();
-                sen.Id = Guid.NewGuid();
-                sen.SensorCode = sensorCode;
-                sen.ProjectId = project.Id;
+            if (alreadySensorCnt == 0)
+            { //只有第一次才插入sensor info
+                for (int i = 0; i < sensorCnt; i++)
+                {
+                    //Console.WriteLine(string.Format("inserting No. {0} Sensor info ", i + 1));
+
+                    string sensorCode = PrefixName + i.ToString("d5");
+                    SensorInfo sen = new SensorInfo();
+                    sen.Id = Guid.NewGuid();
+                    sen.SensorCode = sensorCode;
+                    sen.ProjectId = project.Id;
 
 
-                sensorList.Add(sen);
+                    sensorList.Add(sen);
+                }
+
+                Stopwatch stop = new Stopwatch();
+                stop.Start();
+                dbcontext.BulkInsert(sensorList);
+                stop.Stop();
+                Console.WriteLine(string.Format("insert all sersor info Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
             }
 
-            Stopwatch stop = new Stopwatch();
-            stop.Start();
-            dbcontext.BulkInsert(sensorList);
-            stop.Stop();
-            Console.WriteLine(string.Format("insert all sersor info Elapsed Milliseconds :{0} ", stop.ElapsedMilliseconds));
-
-            var orderEnum = sensorList.OrderBy(s => s.Id);
+            var orderEnum = dbcontext.SensorInfo.OrderBy(s => s.Id).ToList();
 
             List<SensorDataOrigin> dataList = new List<SensorDataOrigin>(dataCntPerSersor);
-
-            int index = 0;
-            foreach (var senItem in orderEnum)
+            for (int index = alreadySensorCnt; index < orderEnum.Count; index++)
             {
+                var senItem = orderEnum[index];
                 dataList.Clear();
                 for (int j = 0; j < dataCntPerSersor; j++)
                 {
@@ -296,7 +314,7 @@ DBCC DROPCLEANBUFFERS;";
                 }
 
                 Console.Write(string.Format("inserting data of {0} , order: {1:d5},", senItem.SensorCode, index));
-                stop = new Stopwatch();
+                Stopwatch stop = new Stopwatch();
                 stop.Start();
                 dbcontext = new DSMContext();
                 dbcontext.ChangeTracker.AutoDetectChangesEnabled = false;
@@ -304,7 +322,6 @@ DBCC DROPCLEANBUFFERS;";
                 stop.Stop();
 
                 Console.WriteLine(string.Format(" Elapsed :{0}  ms", stop.ElapsedMilliseconds));
-                index++;
             }
             //避免尾巴
 
