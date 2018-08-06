@@ -303,7 +303,6 @@ DBCC DROPCLEANBUFFERS;";
                     var item = new SensorDataOrigin();
                     item.SensorId = senItem.Id;
                     item.MeaTime = StartDate.AddHours(1 * j);
-                    item.Origin = (byte)(j % 2);
                     item.MeaValue1 = j;
                     item.ResValue1 = j;
 
