@@ -24,7 +24,6 @@ namespace SeedDataConsole
         {
             DSMContext dbcontext = new DSMContext();
             Console.WriteLine("数据库连接字符串为：" + dbcontext.Database.GetDbConnection().ConnectionString);
-);
             Console.WriteLine("是否接着上一次操作插入数据，保证数据量达到测试要求？yes/no");
             int alreadySensorCnt = 0;
 
