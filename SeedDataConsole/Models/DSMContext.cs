@@ -43,17 +43,9 @@ namespace SeedDataConsole.Models
 
             modelBuilder.Entity<SensorDataOrigin>(entity =>
             {
-                entity.HasKey(e => new { e.SensorId, e.MeaTime })
-                    .ForSqlServerIsClustered(false);
-
-                entity.HasIndex(e => new { e.SensorId, e.MeaTime })
-                    .HasName("ClusteredIndex-20180803-224531")
-                    .IsUnique()
-                    .ForSqlServerIsClustered();
+                entity.HasKey(e => new { e.SensorId, e.MeaTime, e.Origin });
 
                 entity.Property(e => e.SensorId).HasColumnName("SensorID");
-
-                entity.Property(e => e.MeaTime).HasColumnType("datetime");
 
                 entity.Property(e => e.Remark)
                     .HasMaxLength(255)

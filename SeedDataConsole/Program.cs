@@ -18,7 +18,8 @@ namespace SeedDataConsole
         public static string ConnectionString = "Server=.;Database=XLDDSMTest2;Trusted_Connection=True;";
 
         public static string PrefixName = "test";
-        public static DateTime StartDate = new DateTime(1900, 1, 1);
+        public static DateTimeOffset StartDate = new DateTimeOffset((new DateTime(1900, 1, 1)));
+          
 
         static void Main(string[] args)
         {
@@ -91,7 +92,7 @@ namespace SeedDataConsole
                 cntTime += testQueryMultiply(dbcontext, project, insertSensorCnt);
                 cntLoop++;
             }
-          
+
 
             Console.WriteLine(string.Format("平均耗时：{0} ms。", cntTime / cntLoop));
 
@@ -110,7 +111,7 @@ namespace SeedDataConsole
 
 
             var query = from i in db.SensorDataOrigin
-                        where sensorIdList.Contains(i.SensorId) && i.MeaTime > StartDate.AddYears(2) && i.MeaTime < StartDate.AddYears(2).AddDays(15)
+                        where sensorIdList.Contains(i.SensorId) && i.MeaTime > StartDate.AddYears(2) && i.MeaTime < StartDate.AddYears(2).AddDays(30)
                         select i;
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -131,7 +132,7 @@ namespace SeedDataConsole
 
 
             var query = from i in db.SensorDataOrigin
-                        where i.SensorId == sensor.Id && i.MeaTime > StartDate.AddYears(2) && i.MeaTime < StartDate.AddYears(2).AddMonths(3)
+                        where i.SensorId == sensor.Id && i.MeaTime > StartDate.AddYears(2) && i.MeaTime < StartDate.AddYears(2).AddMonths(6)
                         select i;
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -284,13 +285,10 @@ DBCC DROPCLEANBUFFERS;";
 
                     var item = new SensorDataOrigin();
                     item.SensorId = senItem.Id;
-                    item.MeaTime = StartDate.AddHours(0.5 * j);
+                    item.MeaTime = StartDate.AddHours(1 * j);
+                    item.Origin = (byte)(j % 2);
                     item.MeaValue1 = j;
-                    item.MeaValue2 = j;
-                    item.MeaValue3 = j;
                     item.ResValue1 = j;
-                    item.ResValue2 = j;
-                    item.ResValue3 = j;
 
 
                     dataList.Add(item);
